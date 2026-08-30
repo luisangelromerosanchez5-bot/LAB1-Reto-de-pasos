@@ -1,0 +1,8 @@
+api/node_modules/
+api/.env
+app/.dart_tool/
+app/build/
+app/.idea/
+app/.metadata
+app/android/.gradle/
+*.log

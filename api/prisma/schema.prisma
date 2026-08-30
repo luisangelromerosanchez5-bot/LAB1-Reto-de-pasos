@@ -1,0 +1,66 @@
+// Modelo de datos inicial para P7 · Reto de pasos entre fichas
+// Completar / ajustar según lo acordado en la semana 1 (análisis y modelado).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Ficha {
+  id       Int        @id @default(autoincrement())
+  nombre   String
+  usuarios Usuario[]
+  aportes  Aporte[]
+
+  @@map("ficha")
+}
+
+model Usuario {
+  id            Int      @id @default(autoincrement())
+  nombre        String
+  correo        String   @unique
+  contrasenaSha String   @map("contrasena_sha")
+  rol           String   @default("aprendiz") // aprendiz | instructor
+  fichaId       Int      @map("ficha_id")
+  ficha         Ficha    @relation(fields: [fichaId], references: [id])
+  aportes       Aporte[]
+  tokenDispositivo String? @map("token_dispositivo")
+  creadoEn      DateTime @default(now()) @map("creado_en")
+
+  @@map("usuario")
+}
+
+model Reto {
+  id        String   @id @default(uuid())
+  nombre    String
+  iniciaEn  DateTime @map("inicia_en")
+  finalizaEn DateTime @map("finaliza_en")
+  activo    Boolean  @default(true)
+  aportes   Aporte[]
+
+  @@map("reto")
+}
+
+// Un aporte = el delta de pasos que un usuario sube en una hora dada.
+// La corrección por reinicio del contador se hace en el cliente (ver
+// contador_pasos.dart); aquí solo se persiste el delta ya validado.
+model Aporte {
+  id         String   @id @default(uuid())
+  usuarioId  Int      @map("usuario_id")
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id])
+  fichaId    Int      @map("ficha_id")
+  ficha      Ficha    @relation(fields: [fichaId], references: [id])
+  retoId     String   @map("reto_id")
+  reto       Reto     @relation(fields: [retoId], references: [id])
+  pasos      Int
+  registradoEn DateTime @default(now()) @map("registrado_en")
+
+  @@index([retoId])
+  @@index([usuarioId, retoId, registradoEn])
+  @@map("aporte")
+}
