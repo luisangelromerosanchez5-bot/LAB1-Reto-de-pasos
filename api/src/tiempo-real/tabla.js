@@ -31,7 +31,7 @@ export function montarTiempoReal(io) {
 }
 
 export async function obtenerTabla(prisma, retoId) {
-  return prisma.$queryRaw`
+  const filas = await prisma.$queryRaw`
     SELECT f.id, f.nombre, COALESCE(SUM(a.pasos), 0)::int AS total,
            RANK() OVER (ORDER BY COALESCE(SUM(a.pasos), 0) DESC) AS puesto
     FROM ficha f
@@ -39,6 +39,18 @@ export async function obtenerTabla(prisma, retoId) {
     LEFT JOIN aporte a ON a.usuario_id = u.id AND a.reto_id = ${retoId}
     GROUP BY f.id, f.nombre
     ORDER BY total DESC, f.nombre ASC`;
+  return normalizarTabla(filas);
+}
+
+// Prisma representa algunos resultados agregados de PostgreSQL como BigInt.
+// JSON y Socket.IO no los serializan, por eso se convierten antes de enviarlos.
+export function normalizarTabla(filas) {
+  return filas.map((fila) => ({
+    ...fila,
+    id: Number(fila.id),
+    total: Number(fila.total),
+    puesto: Number(fila.puesto),
+  }));
 }
 
 export async function registrarAporte(prisma, io, usuarioId, retoId, pasos) {
