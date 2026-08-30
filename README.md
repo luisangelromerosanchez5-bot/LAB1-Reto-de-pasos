@@ -41,6 +41,10 @@ npx prisma migrate deploy
 npm run dev                # http://localhost:3000
 ```
 
+Con el backend iniciado, la documentación interactiva se encuentra en
+`http://localhost:3000/api/docs`. El documento OpenAPI se expone en
+`/api/openapi.json`.
+
 ## Cómo arrancar la app (app/)
 
 ```bash
